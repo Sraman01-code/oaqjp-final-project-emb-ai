@@ -1,6 +1,7 @@
 """
 Flask server for the Emotion Detection web application.
 """
+import requests
 from flask import Flask, render_template, request
 from EmotionDetection.emotion_detection import emotion_detector
 
@@ -11,7 +12,15 @@ app = Flask("Emotion Detector")
 def emot_detector():
     """Receive text via query param, run emotion detection, return formatted string."""
     text_to_analyze = request.args.get('textToAnalyze')
-    response = emotion_detector(text_to_analyze)
+
+    try:
+        response = emotion_detector(text_to_analyze)
+    except requests.exceptions.RequestException:
+        return ("Could not reach the Watson NLP service. It is only accessible "
+                "from within the IBM Skills Network Cloud IDE, not from a local machine.")
+
+    if response['dominant_emotion'] is None:
+        return "Invalid text! Please try again!"
 
     return (f"For the given statement, the system response is 'anger': {response['anger']}, "
             f"'disgust': {response['disgust']}, 'fear': {response['fear']}, "
